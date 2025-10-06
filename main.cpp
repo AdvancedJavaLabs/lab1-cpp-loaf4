@@ -13,9 +13,9 @@ static long long executeSerialBfsAndGetTime(Graph& g) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 }
 
-static long long executeParallelBfsAndGetTime(Graph& g) {
+static long long executeParallelBfsAndGetTime(Graph& g, int numThreads = 4) {
     auto start = std::chrono::steady_clock::now();
-    g.parallelBFS(0); // заглушка
+    g.parallelBFS(0, numThreads);
     auto end = std::chrono::steady_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 }
@@ -35,7 +35,6 @@ int main() {
         }
 
         RandomGraphGenerator gen;
-
         for (size_t i = 0; i < sizes.size(); ++i) {
             std::cout << "--------------------------\n";
             std::cout << "Generating graph of size " << sizes[i] << " ... wait\n";
@@ -49,6 +48,32 @@ int main() {
             fw << "\nParallel: " << parallelTime;
             fw << "\n--------\n";
             fw.flush();
+        }
+        std::cout << "Done. Results in tmp/results.txt\n";
+
+        std::ofstream fw_graph("tmp/results_graph.txt");
+        if (!fw_graph) {
+            std::cerr << "Failed to open tmp/results_graph.txt for writing\n";
+            return 1;
+        }
+
+        std::cout << "Start serial BFS\n";
+        for (size_t i = 0; i < sizes.size(); ++i) {
+            std::cout << "Generating graph of size " << sizes[i] << " ... wait\n";
+            Graph g = gen.generateGraph(r, sizes[i], connections[i]);
+            long long serialTime = executeSerialBfsAndGetTime(g);
+            fw_graph << serialTime << " ";
+        }
+        fw_graph << std::endl;
+        for (int j = 2; j <= 32; j *= 2) {
+            std::cout << "Start parallel BFS with " << j << " cores\n";
+            for (size_t i = 0; i < sizes.size(); ++i) {
+                std::cout << "Generating graph of size " << sizes[i] << " ... wait\n";
+                Graph g = gen.generateGraph(r, sizes[i], connections[i]);
+                long long parallelTime = executeParallelBfsAndGetTime(g, j);
+                fw_graph << parallelTime << " ";
+            }
+            fw_graph << std::endl;
         }
 
         std::cout << "Done. Results in tmp/results.txt\n";

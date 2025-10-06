@@ -5,7 +5,7 @@ class Graph {
 public:
     explicit Graph(int vertices);
     void addEdge(int src, int dest);
-    void parallelBFS(int startVertex); // заглушка, как в Java
+    void parallelBFS(int startVertex, int numThreads); // заглушка, как в Java
     void bfs(int startVertex);         // обычный BFS
     int vertices() const;
 
